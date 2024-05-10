@@ -1,6 +1,6 @@
 """CREATE_VECTORSTORE.PY
 This script creates a Faiss vectorstore from the page descriptions.
-Dependencies: `dotenv`, 'faiss-cpu', `langchain`, `tqdm`
+Dependencies: `dotenv`, `tqdm`, `bs4`, `requests`, `langchain-community`, `langchain-voyageai`, 'faiss-cpu', `langchain`,
 """
 
 # Library imports
