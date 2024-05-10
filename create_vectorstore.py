@@ -4,11 +4,12 @@ Dependencies: `dotenv`, 'faiss-cpu', `langchain`, `tqdm`
 """
 
 # Library imports
+import re
 import os
 import time
+import bs4
 import json
 import requests
-import bs4
 
 from tqdm import tqdm
 from dotenv import load_dotenv
@@ -36,18 +37,23 @@ def scrape_data() -> list:
         res = requests.get(article['link'])
         soup = bs4.BeautifulSoup(res.text, "html.parser")
         article["content"] = soup.find("main").text
+
+        # clean
+        article["content"] = article["content"].strip()
+        article["content"] = re.sub(r'\s+', ' ', article["content"])
+
         time.sleep(0.5)
     
     # Save to JSON
     with open("unprocessed/articles.json", "w") as f:
         json.dump(articles, f, indent=4)
 
-def get_data(path: str) -> list:
+def format_documents(path: str) -> list:
     """ Returns list of processed LangChain Documents """
 
     # Load documents
     print("Loading documents...")
-    bios = json.load(open(path, "r"))
+    articles = json.load(open(path, "r"))
     documents = []
     none_count = 0
 
