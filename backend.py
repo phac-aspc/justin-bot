@@ -1,5 +1,5 @@
 """BACKEND.PY
-This script finds Uwaterloo faculty members with bios that match your query
+This script finds Infobase articles that are relevant to your query
 Dependencies: `dotenv`, `langchain`, `langchain-community`, `langchain-voyageai`, `faiss-cpu`
 """
 
@@ -41,7 +41,7 @@ def main(query: str, k: int=4):
 
     # Search
     results = search(query, db, k=k)
-    print([r.metadata['link'] for r in results])
+    return results
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
