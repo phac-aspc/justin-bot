@@ -7,12 +7,17 @@ Dependencies: `dotenv`, `langchain`, `langchain-community`, `langchain-voyageai`
 import os
 import argparse
 from dotenv import load_dotenv
-from langchain_community.vectorstores import FAISS
-from langchain_voyageai import VoyageAIEmbeddings
 
-# Load API key
+from langchain_community.vectorstores import FAISS
+from langchain.prompts import PromptTemplate
+from langchain_voyageai import VoyageAIEmbeddings
+from langchain_anthropic import ChatAnthropic
+
+
+# Load data
 load_dotenv(".env")
-KEY = os.environ["VOYAGE_API_KEY"]
+VOYAGE_KEY = os.environ["VOYAGE_API_KEY"]
+ANTHROPIC_KEY = os.environ["ANTHROPIC_API_KEY"]
 
 def load_embeddings(key: str) -> VoyageAIEmbeddings:
     """ Load the embeddings model """
@@ -30,18 +35,46 @@ def load_db(embeddings: VoyageAIEmbeddings,
                             allow_dangerous_deserialization=True)
     return base
 
-def search(query: str, db: FAISS, k: int=4) -> list:
+def load_llm(key: str) -> ChatAnthropic:
+    # create a prompt template
+    template = """You are a helpful AI assistant that methodically answers questions using snippets of medical articles. 
+    You are truthful and say "I don't know" when the snippet does not DIRECTLY answer the question.
+    You NEVER provide personal medical advice. You NEVER output numerical statistics in your response, as these can out of context.  
+
+    A client asks you the following question: {question}
+    Use the following extract to answer the question:
+    ```
+    {extract}
+    ```
+
+    Your answer WITHOUT numerical statistics or personal medical advice: 
+    """
+    prompt = PromptTemplate(input_variables=['question, extract'], template=template)
+    
+    llm = ChatAnthropic(model="claude-3-haiku-20240307", temperature=0.7, 
+                        max_tokens=512, api_key=key)
+    
+    return prompt | llm
+    
+
+# Run search
+def find_extracts(query: str, db: FAISS, k: int=4) -> list:
     """ Search for the top k similar records in the database """
     return db.similarity_search(query, k=k)
 
+def generate_answer(query : str, extract : str, llm : ChatAnthropic) -> str:
+    return llm.invoke({'question': query, 'extract': extract})
+
 def main(query: str, k: int=4):
     # Load data
-    model = load_embeddings(KEY)
+    model = load_embeddings(VOYAGE_KEY)
     db = load_db(model, "./processed")
+    llm = load_llm(ANTHROPIC_KEY)
 
     # Search
-    results = search(query, db, k=k)
-    return results
+    results = find_extracts(query, db, k=k)
+    answer = generate_answer(query, results[0].page_content, llm)
+    return [results, answer]
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
@@ -49,4 +82,5 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--results", help="Number of results to return", type=int, default=4)
 
     args = parser.parse_args()
-    main(args.query, args.results)
+    results, answer = main(args.query, args.results)
+    print(results[0].page_content, answer.content, sep="\n")
