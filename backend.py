@@ -37,9 +37,9 @@ def load_db(embeddings: VoyageAIEmbeddings,
 
 def load_llm(key: str) -> ChatAnthropic:
     # create a prompt template
-    template = """You are a helpful AI assistant that methodically answers questions using snippets of medical articles. 
+    template = """You are a professional AI assistant that methodically answers questions using snippets of medical articles. 
     You are truthful and say "I don't know" when the snippet does not DIRECTLY answer the question.
-    You NEVER provide personal medical advice. You NEVER output numerical statistics in your response, as these can out of context.  
+    You NEVER provide personal medical advice. You NEVER provide numerical data like dates, percentages, or other statistics.  
 
     A client asks you the following question: {question}
     Use the following extract to answer the question:
@@ -47,7 +47,7 @@ def load_llm(key: str) -> ChatAnthropic:
     {extract}
     ```
 
-    Your answer WITHOUT numerical statistics or personal medical advice: 
+    Your answer WITHOUT numerical data: 
     """
     prompt = PromptTemplate(input_variables=['question, extract'], template=template)
     

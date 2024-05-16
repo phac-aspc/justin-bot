@@ -6,3 +6,4 @@ langchain-voyageai==0.1.0
 tqdm==4.66.4
 bs4==0.0.2
 requests==2.31.0
+better_profanity==0.7.0
