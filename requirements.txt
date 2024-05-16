@@ -4,6 +4,7 @@ langchain==0.1.19
 langchain-anthropic==0.1.11
 langchain-community==0.0.38
 langchain-voyageai==0.1.0
+faiss-cpu==1.8.0
 tqdm==4.66.4
 bs4==0.0.2
 requests==2.31.0

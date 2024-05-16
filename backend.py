@@ -1,6 +1,6 @@
 """BACKEND.PY
 This script finds Infobase articles that are relevant to your query
-Dependencies: `dotenv`, `langchain`, `langchain-community`, `langchain-voyageai`, `faiss-cpu`
+Dependencies: `dotenv`, `langchain`, `langchain-community`, `langchain-voyageai`, `faiss-cpu`, `langchain-anthropic`
 """
 
 # Load libraries
