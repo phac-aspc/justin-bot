@@ -44,6 +44,8 @@ def no_stats(answer : str) -> bool:
         # Years are allowed
         if len(num) < 5 and num[:2] == "20" and int(num[2:]) <= 30:
             continue
+        elif len(num) < 2: # likely an age or a month
+            continue
         return False # implicit else, we found a number
     
     return True # all good
