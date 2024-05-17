@@ -1,6 +1,7 @@
 # Library imports
 import os
 import re
+import sys
 import logging
 import streamlit as st 
 from dotenv import load_dotenv
@@ -14,16 +15,38 @@ load_dotenv(".env")
 EMBED_KEY = os.environ["VOYAGE_API_KEY"]
 ANTHROPIC_KEY = os.environ["ANTHROPIC_API_KEY"]
 
-logging.basicConfig(
-    filename='chatbot_log.txt', 
-    level=logging.WARN, 
-    format='%(asctime)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
+logging.basicConfig( 
+    level=logging.INFO, 
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    handlers=[logging.StreamHandler(sys.stdout)] # switch to below for file logging
+    # filename='chatbot_log.txt'
 )
 
 embed_model = load_embeddings(EMBED_KEY)
 db = load_db(embed_model, "./processed")
 llm = load_llm(ANTHROPIC_KEY)
+
+
+
+# Helper function
+def no_stats(answer : str) -> bool:
+    """
+    Check if the answer contains any numerical statistics.
+    """
+    # Don't count the -19 in COVID-19 as a number
+    answer = re.sub(r"COVID-19", "", answer)
+    # Don't count numerical bullets as a number
+    answer = re.sub(r'^\d+\.\s*', '', answer, flags=re.MULTILINE)
+
+    numbers = re.findall(r'\b\d+\b', answer)
+    for num in numbers:
+        # Years are allowed
+        if len(num) < 5 and num[:2] == "20" and int(num[2:]) <= 30:
+            continue
+        return False # implicit else, we found a number
+    
+    return True # all good
 
 
 
@@ -68,15 +91,19 @@ if submit and query:
         answer = generate_answer(query, results[0].page_content, llm)
 
         # Check for profanity and hallucinated numbers
-        if (len(answer.content) > 100 and not re.search(r"\b[0-9]+\b", answer.content) 
+        if (len(answer.content) > 100 and no_stats(answer.content) 
             and not profanity.contains_profanity(answer.content)):            
             st.write("## Computer-generated summary:")
             st.write("A computer attempted to answer your question with the most relevant article found. **This content is not human-verified** so be careful and double-check specific claims, especially if there are numerical statistics or personal advice:")
             st.write("> " + answer.content.replace("\n", "\n> "))
+
+            logging.info(f"Question: {query}\n")
+            logging.info(f"Extract: {results[0].page_content}\n")
+            logging.info(f"Answer: {answer.content}\n")
         else:
-            logging.warning(f"Question: {query}")
-            logging.warning(f"Extract: {results[0].page_content}")
-            logging.warning(f"Answer: {answer.content}")
+            logging.warning(f"Question: {query}\n")
+            logging.warning(f"Extract: {results[0].page_content}\n")
+            logging.warning(f"Answer: {answer.content}\n")
 
     
 # Error message

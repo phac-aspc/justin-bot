@@ -42,7 +42,7 @@ def load_llm(key: str) -> ChatAnthropic:
     You NEVER provide personal medical advice. You NEVER provide numerical data like dates, percentages, or other statistics.  
 
     A client asks you the following question: {question}
-    Use the following extract to answer the question:
+    Use the following article snippet to answer the question:
     ```
     {extract}
     ```
