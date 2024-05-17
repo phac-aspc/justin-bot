@@ -74,9 +74,9 @@ if submit and query:
             st.write("A computer attempted to answer your question with the most relevant article found. **This content is not human-verified** so be careful and double-check specific claims, especially if there are numerical statistics or personal advice:")
             st.write("> " + answer.content.replace("\n", "\n> "))
         else:
-            logging.warn("Question: ", query)
-            logging.warn("Extract: ", results[0].page_content)
-            logging.warn("Answer: ", answer.content)
+            logging.warning(f"Question: {query}")
+            logging.warning(f"Extract: {results[0].page_content}")
+            logging.warning(f"Answer: {answer.content}")
 
     
 # Error message
