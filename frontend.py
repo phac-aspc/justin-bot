@@ -2,7 +2,9 @@
 import os
 import re
 import sys
+import locale
 import logging
+import datetime
 import streamlit as st 
 from dotenv import load_dotenv
 from better_profanity import profanity
@@ -34,6 +36,9 @@ def no_stats(answer : str) -> bool:
     """
     Check if the answer contains any numerical statistics.
     """
+    # If a percentage is in the answer, it's likely a statistic
+    if "%" in answer:
+        return False
     # Don't count the -19 in COVID-19 as a number
     answer = re.sub(r"COVID-19", "", answer)
     # Don't count numerical bullets as a number
@@ -44,7 +49,7 @@ def no_stats(answer : str) -> bool:
         # Years are allowed
         if len(num) < 5 and num[:2] == "20" and int(num[2:]) <= 30:
             continue
-        elif len(num) < 2: # likely an age or a month
+        elif len(num) < 3: # likely an age or a month
             continue
         return False # implicit else, we found a number
     
@@ -82,10 +87,15 @@ if submit and query:
             if unique_results.get(res.metadata['title']):
                 continue
             unique_results[res.metadata['title']] = True
+            
+            # Format date
+            date_obj = datetime.datetime.strptime(res.metadata['date'], "%Y-%m-%d")
+            locale.setlocale(locale.LC_TIME, 'en_US.UTF-8')
+            formatted_date = date_obj.strftime("%B %d, %Y")
 
             # Article descriptions
             st.write(f"{i}. [{res.metadata['title']}]({res.metadata['link']})" + 
-                    f": {res.metadata['description']}")
+                    f" ({formatted_date}): {res.metadata['description']}")
             st.write("")
             i += 1
 
