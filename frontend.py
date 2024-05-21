@@ -2,7 +2,6 @@
 import os
 import re
 import sys
-import locale
 import logging
 import datetime
 import streamlit as st 
@@ -90,7 +89,6 @@ if submit and query:
             
             # Format date
             date_obj = datetime.datetime.strptime(res.metadata['date'], "%Y-%m-%d")
-            locale.setlocale(locale.LC_TIME, 'en_US.UTF-8')
             formatted_date = date_obj.strftime("%B %d, %Y")
 
             # Article descriptions
