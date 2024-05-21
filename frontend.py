@@ -81,12 +81,14 @@ if submit and query:
         unique_results = {}
         i = 1
 
+        # Sort the articles by recency
+        results = sorted(results, key=lambda x: x.metadata['date'], reverse=True)
         for res in results:
             # Don't display the same article many times
             if unique_results.get(res.metadata['title']):
                 continue
             unique_results[res.metadata['title']] = True
-            
+        
             # Format date
             date_obj = datetime.datetime.strptime(res.metadata['date'], "%Y-%m-%d")
             formatted_date = date_obj.strftime("%B %d, %Y")
