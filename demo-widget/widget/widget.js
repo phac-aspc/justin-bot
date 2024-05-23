@@ -1,29 +1,8 @@
-function getRelatedArticles(query) {
-    // temporary mock response
-    const response = {
-        links: [
-            {
-                title: 'How to wash your hands',
-                url: 'https://www.cdc.gov/handwashing/index.html',
-                description: 'Learn how to wash your hands properly to prevent the spread of germs.',
-                date: '2021-03-01'
-            },
-            {
-                title: 'How to wear a mask',
-                url: 'https://www.cdc.gov/coronavirus/2019-ncov/prevent-getting-sick/how-to-wear-cloth-face-coverings.html',
-                description: 'Learn how to wear a mask properly to prevent the spread of germs.',
-                date: '2021-03-01'
-            },
-            {
-                title: 'How to social distance',
-                url: 'https://www.cdc.gov/coronavirus/2019-ncov/prevent-getting-sick/social-distancing.html',
-                description: 'Learn how to social distance properly to prevent the spread of germs.',
-                date: '2021-03-01'
-            }
-        ],
-    };
-
-    return response;
+async function getRelatedArticles(query) {
+    const response = await fetch("http://localhost:5555/api/related?cache=TRUE&query=" 
+        + encodeURIComponent(query));
+    
+    return response.json();
 }
 
 function handleWidgetButtonClick() {
@@ -34,7 +13,7 @@ function handleWidgetButtonClick() {
     buttonDiv.classList.toggle('chat-widget-active');
 }
 
-function handleWidgetSubmit(event) {
+async function handleWidgetSubmit(event) {
     event.preventDefault();
     const query = document.querySelector('.chat-widget-modal .chat-widget-input').value;
     const modalBody = document.querySelector('.chat-widget-modal .chat-widget-modal-body');
@@ -55,7 +34,7 @@ function handleWidgetSubmit(event) {
     }
 
     try {
-        const relatedArticles = getRelatedArticles(query);
+        const relatedArticles = await getRelatedArticles(query);
 
         // error if no articles found
         if (relatedArticles.links.length === 0) {
@@ -90,8 +69,8 @@ function handleWidgetSubmit(event) {
 
             modalBody.appendChild(result);
         }
-    } catch {
-        // ENSURE ERROR IS LOGGED IN OUR PRIVATE SERVER
+    } catch(err) {
+        console.error(err);
         const error = document.createElement('p');
         error.classList.add('chat-widget-result');
         error.innerHTML = 'Our team is investigating some issues with the search assistant. Please try again later.';
