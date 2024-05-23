@@ -90,3 +90,11 @@ div.chat-widget-modal.chat-widget-active {
     border: none;
     border-radius: 15px;
 }
+
+.chat-widget-br {
+    height: 20px;
+}
+
+.chat-widget-modal div.chat-widget-result {
+    margin-bottom: 25px;
+}

@@ -1,2 +1,0 @@
-- Enable searches by article date
-- Number filter might trip on grades 6-10. Check out why.

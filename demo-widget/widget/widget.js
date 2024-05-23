@@ -1,9 +1,103 @@
+function getRelatedArticles(query) {
+    // temporary mock response
+    const response = {
+        links: [
+            {
+                title: 'How to wash your hands',
+                url: 'https://www.cdc.gov/handwashing/index.html',
+                description: 'Learn how to wash your hands properly to prevent the spread of germs.',
+                date: '2021-03-01'
+            },
+            {
+                title: 'How to wear a mask',
+                url: 'https://www.cdc.gov/coronavirus/2019-ncov/prevent-getting-sick/how-to-wear-cloth-face-coverings.html',
+                description: 'Learn how to wear a mask properly to prevent the spread of germs.',
+                date: '2021-03-01'
+            },
+            {
+                title: 'How to social distance',
+                url: 'https://www.cdc.gov/coronavirus/2019-ncov/prevent-getting-sick/social-distancing.html',
+                description: 'Learn how to social distance properly to prevent the spread of germs.',
+                date: '2021-03-01'
+            }
+        ],
+    };
+
+    return response;
+}
+
 function handleWidgetButtonClick() {
     const modalDiv = document.querySelector('.chat-widget-modal');
     const buttonDiv = document.querySelector('.chat-widget-button');
 
     modalDiv.classList.toggle('chat-widget-active');
     buttonDiv.classList.toggle('chat-widget-active');
+}
+
+function handleWidgetSubmit(event) {
+    event.preventDefault();
+    const query = document.querySelector('.chat-widget-modal .chat-widget-input').value;
+    const modalBody = document.querySelector('.chat-widget-modal .chat-widget-modal-body');
+    const prevResults = document.querySelectorAll('.chat-widget-modal .chat-widget-result');
+
+    // Clear previous results
+    for (let i = 0; i < prevResults.length; i++) {
+        prevResults[i].remove();
+    }
+    
+    // Show empty query error
+    if (query.length === 0) {
+        const error = document.createElement('p');
+        error.classList.add('chat-widget-result');
+        error.innerHTML = 'Please type a question into the text box above.';
+        modalBody.appendChild(error);
+        return;
+    }
+
+    try {
+        const relatedArticles = getRelatedArticles(query);
+
+        // error if no articles found
+        if (relatedArticles.links.length === 0) {
+            const error = document.createElement('p');
+            error.classList.add('chat-widget-result');
+            error.innerHTML = 'No articles found. Please reword your search.';
+            modalBody.appendChild(error);
+            return;
+        }
+
+        // list other articles found
+        for (let i = 0; i < relatedArticles.links.length; i++) {
+            const article = relatedArticles.links[i];
+            const result = document.createElement('div');
+            result.classList.add('chat-widget-result');
+
+            const link = document.createElement('a');
+            link.href = article.url;
+            link.target = '_blank';
+            link.innerHTML = `<b>${article.title}</b>`;
+            result.appendChild(link);
+
+            const formattedDate = new Date(article.date).toLocaleDateString('en-US', 
+                { year: 'numeric', month: 'long', day: 'numeric' });
+            const date = document.createElement('p');
+            date.innerHTML = `(${formattedDate})`;
+            result.appendChild(date);
+
+            const description = document.createElement('p');
+            description.innerHTML = article.description;
+            result.appendChild(description);
+
+            modalBody.appendChild(result);
+        }
+    } catch {
+        // ENSURE ERROR IS LOGGED IN OUR PRIVATE SERVER
+        const error = document.createElement('p');
+        error.classList.add('chat-widget-result');
+        error.innerHTML = 'Our team is investigating some issues with the search assistant. Please try again later.';
+        modalBody.appendChild(error);
+        return;
+    }
 }
 
 function init() {
@@ -59,6 +153,7 @@ function init() {
     const modalInput = document.createElement('textarea');
     modalInput.classList.add('chat-widget-input');
     modalInput.setAttribute('placeholder', 'Type your question here...');
+    modalInput.setAttribute('maxlength', '300');
     modalBodyContainer.appendChild(modalInput);
 
     const modalSubmit = document.createElement('button');
@@ -68,7 +163,13 @@ function init() {
     modalSubmit.setAttribute('role', 'button');
     modalSubmit.setAttribute('aria-label', 'Search for relevant articles');
     modalSubmit.setAttribute('title', 'Search for relevant articles');
+    modalSubmit.addEventListener('click', handleWidgetSubmit);
     modalBodyContainer.appendChild(modalSubmit);
+
+    // Space for future results
+    const br = document.createElement('div');
+    br.classList.add('chat-widget-br');
+    modalBodyContainer.appendChild(br);
 
     // Add to DOM
     document.body.appendChild(wrapper);
