@@ -48,6 +48,7 @@ div.chat-widget-modal.chat-widget-active {
     padding: 20px 20px;
     margin-bottom: 20px;
     background-color: #26374A;
+    border-radius: 8px 8px 0px 0px;
 }
 
 .chat-widget-modal .chat-widget-modal-title h3 {
@@ -89,6 +90,7 @@ div.chat-widget-modal.chat-widget-active {
     width: 100%;
     border: none;
     border-radius: 15px;
+    margin-top: 10px;
 }
 
 .chat-widget-br {
@@ -97,4 +99,14 @@ div.chat-widget-modal.chat-widget-active {
 
 .chat-widget-modal div.chat-widget-result {
     margin-bottom: 25px;
+}
+
+.chat-widget-modal input.chat-widget-checkbox {
+    margin-right: 10px;
+}
+
+.chat-widget-modal label.chat-widget-label {
+    font-weight: normal;
+    display: inline;
+    margin-bottom: 10px;
 }

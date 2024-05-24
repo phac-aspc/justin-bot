@@ -1,3 +1,0 @@
-Lazy load chatbot widget with javascript on document ready
-1. Widget shows one of two states: either button to expand it or widget window with some instructions and a search bar.
-2. After user searches, some links pop up. When AI generated response is done, that also pops up.

@@ -95,36 +95,40 @@ def query():
         return jsonify({'error': 'Query too long'}), 413
     
     # Get the extracts
-    results = find_extracts(query, db)
-    logging.info(f"Query: {query}. Extracts found: {','.join([res.metadata['title'] for res in results])}.")
+    try:
+        results = find_extracts(query, db)
+        logging.info(f"Query: {query}. Extracts found: {','.join([res.metadata['title'] for res in results])}.")
 
-    # User sees results ordered by recency. 
-    sorted_results = sorted(results, key=lambda x: x.metadata['date'], reverse=True)
-    unique_results = {}
-    out = {"links": []}
+        # User sees results ordered by recency. 
+        sorted_results = sorted(results, key=lambda x: x.metadata['date'], reverse=True)
+        unique_results = {}
+        out = {"links": []}
 
-    for res in sorted_results:
-        # Don't display the same article many times
-        if unique_results.get(res.metadata['title']):
-            continue
-        unique_results[res.metadata['title']] = True
+        for res in sorted_results:
+            # Don't display the same article many times
+            if unique_results.get(res.metadata['title']):
+                continue
+            unique_results[res.metadata['title']] = True
 
-        out["links"].append({
-            "title": res.metadata['title'],
-            "url": res.metadata['link'],
-            "description": res.metadata['description'],
-            "date": res.metadata['date']
-        })
+            out["links"].append({
+                "title": res.metadata['title'],
+                "url": res.metadata['link'],
+                "description": res.metadata['description'],
+                "date": res.metadata['date']
+            })
 
-    # If query is cached, create a cache key
-    if cache == "TRUE":
-        # datetime has microsecond precision compared to time
-        cache_key = hash(query + str(datetime.datetime.now()))
-        # Save only the most related extract
-        CACHE[cache_key] = {"query": query, "extract": results[0], "time": time.time()}
-        out["id"] = cache_key
-    
-    return jsonify(out)
+        # If query is cached, create a cache key
+        if cache == "TRUE":
+            # datetime has microsecond precision compared to time
+            cache_key = str(hash(query + str(datetime.datetime.now())))
+            # Save only the most related extract
+            CACHE[cache_key] = {"query": query, "extract": results[0], "time": time.time()}
+            out["id"] = cache_key
+        
+        return jsonify(out)
+    except Exception as e:
+        logging.warning(f"Error// Query: {query}. Error: {e}.")
+        return jsonify({'error': 'Internal server error'}), 500
 
 
 
@@ -132,22 +136,28 @@ def query():
 @app.route('/api/answer', methods=['GET', 'POST'])
 def answer():
     id = request.args.get('id')
-    if not CACHE.get(int(id)):
+    if not CACHE.get(id):
         logging.warning(f"Error// Invalid id: {id}.")
         return jsonify({'error': 'Invalid id'}), 400
     
-    query = CACHE[int(id)]['query']
-    extract = CACHE[int(id)]['extract']
-    answer = generate_answer(query, extract.page_content, llm)
-    CACHE.pop(int(id))
+    query = CACHE[id]['query']
+    extract = CACHE[id]['extract']
+    try:
+        answer = generate_answer(query, extract.page_content, llm)
 
-    # Check if answer is valid
-    if (len(answer.content) > 100 and no_stats(answer.content) 
-        and not profanity.contains_profanity(answer.content)):
-        return jsonify({"answer": answer.content})
-    else:
-        logging.warning(f"Error// Invalid answer. Query: {query}. Extract: {extract.page_content}. Answer: {answer.content}.")
-        return jsonify({"answer": "Sorry, I don't have an answer for that."}), 500
+        # Check if answer is valid
+        if (len(answer.content) > 100 and no_stats(answer.content) 
+            and not profanity.contains_profanity(answer.content)):
+            logging.info(f"Query: {query}. Extract: {extract.page_content}. Answer: {answer.content}.")
+            return jsonify({"answer": answer.content})
+        else:
+            logging.warning(f"Error// Invalid answer. Query: {query}. Extract: {extract.page_content}. Answer: {answer.content}.")
+            return jsonify({"answer": "Sorry, I don't have an answer for that."}), 500
+    except Exception as e:
+        logging.warning(f"Error// Query: {query}. Extract: {extract.page_content}. Error: {e}.")
+        return jsonify({'error': 'Internal server error'}), 500
+    finally:
+        CACHE.pop(id)
 
 if __name__ == '__main__':
     cleaner_thread = Thread(target=cache_cleaner, daemon=True)
