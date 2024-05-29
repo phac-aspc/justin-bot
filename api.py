@@ -85,7 +85,7 @@ def query():
         return jsonify({'error': 'No query provided'}), 400
     
     # Query has code characters
-    if re.search(r'[;|`|{|}|#|\-\-|\*|\[|\]|\/\/|\\|\|]+', query):
+    if re.search(r'([;|`|{|}|#|\*|\[|\]|\/\/|\\|\|]+|\-{2,})', query):
         logging.warning(f"Error// Coding characters in query: {query}.")
         return jsonify({'error': 'Invalid query'}), 403
 
