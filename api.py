@@ -46,7 +46,7 @@ def cache_cleaner():
 
         for key in keys_to_delete:
             del CACHE[key]
-        time.sleep(30)
+        time.sleep(60)
 
 def no_stats(answer : str) -> bool:
     """
@@ -163,4 +163,4 @@ if __name__ == '__main__':
     cleaner_thread = Thread(target=cache_cleaner, daemon=True)
     cleaner_thread.start()
 
-    app.run(port=5555)
+    app.run(host="0.0.0.0", port=5555)

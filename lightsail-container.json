@@ -1,0 +1,8 @@
+{
+    "flask": {
+        "image": ":infobase-chatbot-flask-service-test.c-flask-api.1",
+        "ports": {
+            "5555": "HTTP"
+        }
+    }
+}
