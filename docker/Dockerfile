@@ -8,16 +8,16 @@ EXPOSE 5555
 WORKDIR /app
 
 # Copy the dependencies file to the working directory
-COPY requirements.txt .
+COPY ../requirements.txt ./
 
 # Install any dependencies
 RUN pip install -r requirements.txt
 
 # Copy backend files necessary for the API
-COPY api.py .
-COPY backend.py .
-COPY .env .
-COPY processed/ ./processed/
+COPY ../api.py ./
+COPY ../backend.py ./
+COPY ../.env ./
+COPY ../processed/ ./processed/
 
 # Specify the command to run on container start
 CMD [ "python", "./api.py" ]
