@@ -14,6 +14,7 @@ import requests
 import argparse
 
 from tqdm import tqdm
+from html import unescape
 from dotenv import load_dotenv
 
 from langchain_openai import OpenAIEmbeddings
@@ -51,12 +52,13 @@ def scrape_data(french : bool = False) -> list:
         # clean
         article["content"] = article["content"].strip()
         article["content"] = re.sub(r'\s+', ' ', article["content"])
+        article["content"] = unescape(article["content"])
 
         time.sleep(0.5)
     
     # Save to JSON
-    with open(f"unprocessed/articles{'_fr' if french else ''}.json", "w") as f:
-        json.dump(articles, f, indent=4)
+    with open(f"unprocessed/articles{'_fr' if french else ''}.json", "w", encoding=encoding) as f:
+        json.dump(articles, f, indent=4, ensure_ascii=(not french))
 
 def format_documents(path: str, chunk_size : int) -> list:
     """ Returns list of processed LangChain Documents """
@@ -103,7 +105,6 @@ def main(french : bool = False, scrape : bool = False):
     # Scrape data
     if scrape:
         scrape_data(french)
-        return
 
     # Load embeddings model
     if french:
