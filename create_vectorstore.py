@@ -125,4 +125,4 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--scrape", action="store_true", help="Scrape data")
 
     args = parser.parse_args()
-    main(args.french, args.scrape)
+    main(french = args.french, scrape = args.scrape)
