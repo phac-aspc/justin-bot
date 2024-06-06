@@ -9,33 +9,43 @@ import os
 import time
 import bs4
 import json
+import chardet
 import requests
+import argparse
 
 from tqdm import tqdm
 from dotenv import load_dotenv
 
-from langchain_community.vectorstores import FAISS
+from langchain_openai import OpenAIEmbeddings
 from langchain.docstore.document import Document
 from langchain_voyageai import VoyageAIEmbeddings
+from langchain_community.vectorstores import FAISS
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 
 # Load API key
 load_dotenv(".env")
-KEY = os.environ["VOYAGE_API_KEY"]
+VOYAGE_KEY = os.environ["VOYAGE_API_KEY"]
+OPENAI_KEY = os.environ["OPENAI_API_KEY"]
 
-def scrape_data() -> list:
+def scrape_data(french : bool = False) -> list:
     """ Returns list of website snippets """
 
     # Get article list
-    res = requests.get("https://health-infobase.canada.ca/src/json/articles.json")
+    url = f"https://health-infobase.canada.ca/src/json/articles{'_fr' if french else ''}.json"
+    res = requests.get(url)
     articles = res.json()
 
+    print(f"Scraping {len(articles)} articles from website...")
     # Get main section's inner text
-    for article in articles:
-        print(".")
+    for i in tqdm(range(len(articles))):
+        article = articles[i]
         res = requests.get(article['link'])
-        soup = bs4.BeautifulSoup(res.text, "html.parser")
+
+        encoding = chardet.detect(res.content)['encoding']
+        decoded_content = res.content.decode(encoding)
+
+        soup = bs4.BeautifulSoup(decoded_content, "html.parser")
         article["content"] = soup.find("main").text
 
         # clean
@@ -45,7 +55,7 @@ def scrape_data() -> list:
         time.sleep(0.5)
     
     # Save to JSON
-    with open("unprocessed/articles.json", "w") as f:
+    with open(f"unprocessed/articles{'_fr' if french else ''}.json", "w") as f:
         json.dump(articles, f, indent=4)
 
 def format_documents(path: str, chunk_size : int) -> list:
@@ -86,17 +96,32 @@ def get_vectorstore(fragments: list, model: VoyageAIEmbeddings,
         dbs[0].merge_from(db)
     dbs[0].save_local(f"{save_path}/vectorstore_merged")
 
-def main():
+def main(french : bool = False, scrape : bool = False):
     batch_size = 20
     chunk_size = 5000
 
+    # Scrape data
+    if scrape:
+        scrape_data(french)
+        return
+
     # Load embeddings model
-    model = VoyageAIEmbeddings(voyage_api_key=KEY, model="voyage-large-2", 
+    if french:
+        model = OpenAIEmbeddings(api_key=OPENAI_KEY, model="text-embedding-3-large")
+    else:
+        model = VoyageAIEmbeddings(voyage_api_key=VOYAGE_KEY, model="voyage-large-2", 
                                batch_size=batch_size)
 
     # Get vectorstore
-    fragments = format_documents("./unprocessed/articles.json", chunk_size)
-    get_vectorstore(fragments, model, "./processed/", batch_size)
+    path = f"./unprocessed/articles{'_fr' if french else ''}.json"
+    fragments = format_documents(path, chunk_size)
+    get_vectorstore(fragments, model, f"./processed/{'fr' if french else 'en'}/", batch_size)
 
 if __name__ == "__main__":
-    main()
+    # Setup argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("-f", "--french", action="store_true", help="Create french vectorstore")
+    parser.add_argument("-s", "--scrape", action="store_true", help="Scrape data")
+
+    args = parser.parse_args()
+    main(args.french, args.scrape)
