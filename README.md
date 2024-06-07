@@ -36,4 +36,14 @@ To deploy the chatbot to AWS lightsail, we have to build a docker image and push
 
 Here's an [AWS tutorial for the deployment process](https://aws.amazon.com/en/tutorials/serve-a-flask-app/). It has quite a few setup steps needed to get the aws-cli and account permissions working. Note that you should use the dockerfile in the `./docker/` directory by copying it to the root directory: `cp ./docker/Dockerfile ./`.
 
-P.S. I've configured the dockerfile and the AWS Lightsail environment to use port 5555 instead of 5000. Pay attention and don't just copy over commands; you'll mess something up and get lots of AWS bills!
+P.S. I've configured the dockerfile and the AWS Lightsail environment to use **port 5555 instead of 5000**. Pay attention and don't just copy over commands; you'll mess something up and get lots of AWS bills!
+
+### Updates
+Here's a log of commands I used when updating my Lightsail service named `infobase-chatbot-flask-service-test` from my Docker image named `flask_api`. 
+1. `cp ./docker/* ./` to get all the dockerfiles and lightsail configuration files in the root directory.
+2. `docker build -t flask_api ./` to build the docker image.
+3. `docker run -p 5555:5555 --name c_flask_api flask_api` to test the docker image locally.
+4. `aws lightsail get-container-services` to remind myself of the old lightsail service name. 
+5. `aws lightsail push-container-image --service-name infobase-chatbot-flask-service-test --label c-flask-api --image flask_api` to push the new image to the lightsail service.
+6. `aws lightsail create-container-service-deployment --service-name infobase-chatbot-flask-service-test --containers file://lightsail-container.json --public-endpoint file://lightsail-endpoint.json` to deploy the new image to the lightsail service.
+7. `aws lightsail get-container-services --service-name infobase-chatbot-flask-service-test` to check the status of the deployment.
