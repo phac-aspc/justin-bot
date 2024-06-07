@@ -25,7 +25,7 @@ logging.basicConfig(
 )
 
 embed_model = load_embeddings(EMBED_KEY)
-db = load_db(embed_model, "./processed")
+db = load_db(embed_model, "./processed/en/")
 llm = load_llm(ANTHROPIC_KEY)
 
 
