@@ -16,20 +16,26 @@ from backend import load_db, load_embeddings, load_llm, find_extracts, generate_
 
 # Prep data
 load_dotenv(".env")
-EMBED_KEY = os.environ["VOYAGE_API_KEY"]
+VOYAGE_KEY = os.environ["VOYAGE_API_KEY"]
 ANTHROPIC_KEY = os.environ["ANTHROPIC_API_KEY"]
+OPENAI_KEY = os.environ["OPENAI_API_KEY"]
 
 logging.basicConfig( 
     level=logging.INFO, 
     format='%(asctime)s - %(levelname)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
-    #handlers=[logging.StreamHandler(sys.stdout)] # switch to below for file logging
-    filename='chatbot_log.txt'
+    #handlers=[logging.StreamHandler(sys.stdout)] # console logging
+    filename='chatbot_log.txt'                    # file logging
 )
 
-embed_model = load_embeddings(EMBED_KEY)
-db = load_db(embed_model, "./processed")
-llm = load_llm(ANTHROPIC_KEY)
+embed_model_en = load_embeddings(VOYAGE_KEY, french=False)
+embed_model_fr = load_embeddings(OPENAI_KEY, french=True)
+
+db_en = load_db(embed_model_en, "./processed/en/")
+db_fr = load_db(embed_model_fr, "./processed/fr/")
+
+llm_en = load_llm(ANTHROPIC_KEY, french=False)
+llm_fr = load_llm(ANTHROPIC_KEY, french=True)
 
 app = Flask(__name__)
 CORS(app)
@@ -62,7 +68,7 @@ def no_stats(answer : str) -> bool:
 
     numbers = re.findall(r'\b\d+\b', answer)
     for num in numbers:
-        # Years are allowed
+        # Years in [2000, 2030] are allowed
         if len(num) < 5 and num[:2] == "20" and int(num[2:]) <= 30:
             continue
         elif len(num) < 3: # likely an age or a month
@@ -78,25 +84,35 @@ def no_stats(answer : str) -> bool:
 def query():
     query = request.args.get('query')
     cache = request.args.get('cache')
+    lang = request.args.get('lang', 'en')
 
     # No query provided
     if not query:
         logging.warning(f"Error// No query sent.")
-        return jsonify({'error': 'No query provided'}), 400
+        if lang == 'fr':
+            return jsonify({'erreur': 'Aucune requête fournie'}), 400
+        else:
+            return jsonify({'error': 'No query provided'}), 400
     
     # Query has code characters
     if re.search(r'([;|`|{|}|#|\*|\[|\]|\/\/|\\|\|]+|\-{2,})', query):
         logging.warning(f"Error// Coding characters in query: {query}.")
-        return jsonify({'error': 'Invalid query'}), 403
+        if lang == 'fr':
+            return jsonify({'erreur': 'Requête invalide'}), 403
+        else:
+            return jsonify({'error': 'Invalid query'}), 403
 
     # Query too long
     if len(query) > 300:
         logging.warning(f"Error// Bypassed length restrictions query: {query}.")
-        return jsonify({'error': 'Query too long'}), 413
+        if lang == 'fr':
+            return jsonify({'erreur': 'Requête trop longue'}), 413
+        else:
+            return jsonify({'error': 'Query too long'}), 413
     
     # Get the extracts
     try:
-        results = find_extracts(query, db)
+        results = find_extracts(query, db_en if lang == 'en' else db_fr)
         logging.info(f"Query: {query}. Extracts found: {','.join([res.metadata['title'] for res in results])}.")
 
         # User sees results ordered by recency. 
@@ -128,7 +144,10 @@ def query():
         return jsonify(out)
     except Exception as e:
         logging.warning(f"Error// Query: {query}. Error: {e}.")
-        return jsonify({'error': 'Internal server error'}), 500
+        if lang == 'fr':
+            return jsonify({'erreur': 'Erreur interne du serveur'}), 500
+        else:
+            return jsonify({'error': 'Internal server error'}), 500
 
 
 
@@ -136,14 +155,19 @@ def query():
 @app.route('/api/answer', methods=['GET', 'POST'])
 def answer():
     id = request.args.get('id')
+    lang = request.args.get('lang', 'en')
+
     if not CACHE.get(id):
         logging.warning(f"Error// Invalid id: {id}.")
-        return jsonify({'error': 'Invalid id'}), 400
+        if lang == 'fr':
+            return jsonify({'erreur': 'Identifiant invalide'}), 400
+        else:
+            return jsonify({'error': 'Invalid id'}), 400
     
     query = CACHE[id]['query']
     extract = CACHE[id]['extract']
     try:
-        answer = generate_answer(query, extract.page_content, llm)
+        answer = generate_answer(query, extract.page_content, llm_en if lang == 'en' else llm_fr)
 
         # Check if answer is valid
         if (len(answer.content) > 100 and no_stats(answer.content) 
@@ -152,10 +176,17 @@ def answer():
             return jsonify({"answer": answer.content})
         else:
             logging.warning(f"Error// Invalid answer. Query: {query}. Extract: {extract.page_content}. Answer: {answer.content}.")
-            return jsonify({"answer": "Sorry, I don't have an answer for that."}), 500
+            
+            if lang == 'fr':
+                return jsonify({"answer": "Désolé, je n'ai pas de réponse à cela."}), 500
+            else: 
+                return jsonify({"answer": "Sorry, I don't have an answer for that."}), 500
     except Exception as e:
         logging.warning(f"Error// Query: {query}. Extract: {extract.page_content}. Error: {e}.")
-        return jsonify({'error': 'Internal server error'}), 500
+        if lang == 'fr':
+            return jsonify({'erreur': 'Erreur interne du serveur'}), 500
+        else:
+            return jsonify({'error': 'Internal server error'}), 500
     finally:
         CACHE.pop(id)
 
