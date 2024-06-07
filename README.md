@@ -35,3 +35,5 @@ You can also run the streamlit frontend with `streamlit run frontend.py` and int
 To deploy the chatbot to AWS lightsail, we have to build a docker image and push it to a container registry. **Don't attempt this if you're not familiar with Docker**. 
 
 Here's an [AWS tutorial for the deployment process](https://aws.amazon.com/en/tutorials/serve-a-flask-app/). It has quite a few setup steps needed to get the aws-cli and account permissions working. Note that you should use the dockerfile in the `./docker/` directory by copying it to the root directory: `cp ./docker/Dockerfile ./`.
+
+P.S. I've configured the dockerfile and the AWS Lightsail environment to use port 5555 instead of 5000. Pay attention and don't just copy over commands; you'll mess something up and get lots of AWS bills!
