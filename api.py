@@ -24,8 +24,8 @@ logging.basicConfig(
     level=logging.INFO, 
     format='%(asctime)s - %(levelname)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
-    #handlers=[logging.StreamHandler(sys.stdout)] # console logging
-    filename='chatbot_log.txt'                    # file logging
+    handlers=[logging.StreamHandler(sys.stdout)]   # console logging
+    #filename='chatbot_log.txt'                    # file logging
 )
 
 embed_model_en = load_embeddings(VOYAGE_KEY, french=False)
