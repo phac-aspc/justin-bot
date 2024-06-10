@@ -34,7 +34,7 @@ You can also run the streamlit frontend with `streamlit run frontend.py` and int
 ### Deployment
 To deploy the chatbot to AWS lightsail, we have to build a docker image and push it to a container registry. **Don't attempt this if you're not familiar with Docker**. 
 
-Here's an [AWS tutorial for the deployment process](https://aws.amazon.com/en/tutorials/serve-a-flask-app/). It has quite a few setup steps needed to get the aws-cli and account permissions working. Note that you should use the dockerfile in the `./docker/` directory by copying it to the root directory: `cp ./docker/Dockerfile ./`.
+Here's an [AWS tutorial for the deployment process](://aws.amazon.com/en/tutorials/serve-a-flask-app/). It has quite a few setup steps needed to get the aws-cli and account permissions working. Note that you should use the dockerfile in the `./docker/` directory by copying it to the root directory: `cp ./docker/Dockerfile ./`.
 
 P.S. I've configured the dockerfile and the AWS Lightsail environment to use **port 5555 instead of 5000**. Pay attention and don't just copy over commands; you'll mess something up and get lots of AWS bills!
 
@@ -45,5 +45,6 @@ Here's a log of commands I used when updating my Lightsail service named `infoba
 3. `docker run -p 5555:5555 --name c_flask_api flask_api` to test the docker image locally.
 4. `aws lightsail get-container-services` to remind myself of the old lightsail service name. 
 5. `aws lightsail push-container-image --service-name infobase-chatbot-flask-service-test --label c-flask-api --image flask_api` to push the new image to the lightsail service.
-6. `aws lightsail create-container-service-deployment --service-name infobase-chatbot-flask-service-test --containers file://lightsail-container.json --public-endpoint file://lightsail-endpoint.json` to deploy the new image to the lightsail service.
-7. `aws lightsail get-container-services --service-name infobase-chatbot-flask-service-test` to check the status of the deployment.
+6. Update my `lightsail-container.json` with the new version number of the image.
+7. `aws lightsail create-container-service-deployment --service-name infobase-chatbot-flask-service-test --containers file://lightsail-container.json --public-endpoint file://lightsail-endpoint.json` to deploy the new image to the lightsail service.
+8. `aws lightsail get-container-services --service-name infobase-chatbot-flask-service-test` to check the status of the deployment.
