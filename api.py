@@ -48,7 +48,8 @@ def cache_cleaner():
     while True:
         current = time.time()
         keys_to_delete = [key for key in CACHE.keys() if current - CACHE[key]['time'] > 10]
-        logging.info(f"Cleaning cache. {len(keys_to_delete)} keys deleted:.")
+        if len(keys_to_delete): 
+            logging.info(f"Cleaning cache. {len(keys_to_delete)} keys deleted:.")
 
         for key in keys_to_delete:
             del CACHE[key]
