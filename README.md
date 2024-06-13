@@ -42,9 +42,11 @@ P.S. I've configured the dockerfile and the AWS Lightsail environment to use **p
 Here's a log of commands I used when updating my Lightsail service named `infobase-chatbot-flask-service-test` from my Docker image named `flask_api`. 
 1. `cp ./docker/* ./` to get all the dockerfiles and lightsail configuration files in the root directory.
 2. `docker build -t flask_api ./` to build the docker image.
-3. `docker run -p 5555:5555 --name c_flask_api flask_api` to test the docker image locally.
-4. `aws lightsail get-container-services` to remind myself of the old lightsail service name. 
-5. `aws lightsail push-container-image --service-name infobase-chatbot-flask-service-test --label c-flask-api --image flask_api` to push the new image to the lightsail service.
-6. Update my `lightsail-container.json` with the new version number of the image.
-7. `aws lightsail create-container-service-deployment --service-name infobase-chatbot-flask-service-test --containers file://lightsail-container.json --public-endpoint file://lightsail-endpoint.json` to deploy the new image to the lightsail service.
-8. `aws lightsail get-container-services --service-name infobase-chatbot-flask-service-test` to check the status of the deployment.
+3. Delete the old container I had.
+4. `docker run -p 5555:5555 --name c_flask_api flask_api` to test the docker image locally.
+5. `aws lightsail get-container-services` to remind myself of the old lightsail service name. 
+6. `aws lightsail push-container-image --service-name infobase-chatbot-flask-service-test --label c-flask-api --image flask_api` to push the new image to the lightsail service.
+7. Update my `lightsail-container.json` with the new version number of the image.
+8. `aws lightsail create-container-service-deployment --service-name infobase-chatbot-flask-service-test --containers file://lightsail-container.json --public-endpoint file://lightsail-endpoint.json` to deploy the new image to the lightsail service.
+9. `aws lightsail get-container-services --service-name infobase-chatbot-flask-service-test` to check the status of the deployment.
+10. `rm Dockerfile lightsail*` to get rid of the files I copied over.
