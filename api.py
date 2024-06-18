@@ -116,12 +116,11 @@ def query():
         results = find_extracts(query, db_en if lang == 'en' else db_fr)
         logging.info(f"Query: {query}. Extracts found: {','.join([res.metadata['title'] for res in results])}.")
 
-        # User sees results ordered by recency. 
-        sorted_results = sorted(results, key=lambda x: x.metadata['date'], reverse=True)
+        # Results sorted by relevance by default. End user can resort as desired
         unique_results = {}
         out = {"links": []}
 
-        for res in sorted_results:
+        for res in results:
             # Don't display the same article many times
             if unique_results.get(res.metadata['title']):
                 continue
