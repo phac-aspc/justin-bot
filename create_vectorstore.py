@@ -17,7 +17,6 @@ from tqdm import tqdm
 from html import unescape
 from dotenv import load_dotenv
 
-from langchain_openai import OpenAIEmbeddings
 from langchain.docstore.document import Document
 from langchain_voyageai import VoyageAIEmbeddings
 from langchain_community.vectorstores import FAISS
@@ -27,7 +26,6 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 # Load API key
 load_dotenv(".env")
 VOYAGE_KEY = os.environ["VOYAGE_API_KEY"]
-OPENAI_KEY = os.environ["OPENAI_API_KEY"]
 
 def scrape_data(french : bool = False) -> list:
     """ Returns list of website snippets """
@@ -75,8 +73,9 @@ def format_documents(path: str, chunk_size : int) -> list:
 
     print(f"Splitting {len(documents)} documents...")
     splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=0)
-    fragments = splitter.split_documents(documents)
-
+    variable_len = splitter.split_documents(documents) 
+    fragments = [f for f in variable_len if len(f.page_content) > 400]
+    print(f"Original fragments: {len(variable_len)}, After removing short fragments: {len(fragments)}")
     return fragments
 
 def get_vectorstore(fragments: list, model: VoyageAIEmbeddings, 
@@ -108,9 +107,10 @@ def main(french : bool = False, scrape : bool = False):
 
     # Load embeddings model
     if french:
-        model = OpenAIEmbeddings(api_key=OPENAI_KEY, model="text-embedding-3-large")
-    else:
         model = VoyageAIEmbeddings(voyage_api_key=VOYAGE_KEY, model="voyage-large-2", 
+                               batch_size=batch_size)
+    else:
+        model = VoyageAIEmbeddings(voyage_api_key=VOYAGE_KEY, model="voyage-multilingual-2", 
                                batch_size=batch_size)
 
     # Get vectorstore
