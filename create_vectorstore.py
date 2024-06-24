@@ -107,10 +107,10 @@ def main(french : bool = False, scrape : bool = False):
 
     # Load embeddings model
     if french:
-        model = VoyageAIEmbeddings(voyage_api_key=VOYAGE_KEY, model="voyage-large-2", 
+        model = VoyageAIEmbeddings(voyage_api_key=VOYAGE_KEY, model="voyage-multilingual-2", 
                                batch_size=batch_size)
     else:
-        model = VoyageAIEmbeddings(voyage_api_key=VOYAGE_KEY, model="voyage-multilingual-2", 
+        model = VoyageAIEmbeddings(voyage_api_key=VOYAGE_KEY, model="voyage-large-2", 
                                batch_size=batch_size)
 
     # Get vectorstore
