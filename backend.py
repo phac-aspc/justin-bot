@@ -10,7 +10,6 @@ from dotenv import load_dotenv
 
 from langchain.prompts import PromptTemplate
 from langchain_anthropic import ChatAnthropic
-from langchain_openai import OpenAIEmbeddings
 from langchain_voyageai import VoyageAIEmbeddings
 from langchain_community.vectorstores import FAISS
 
@@ -20,21 +19,20 @@ from langchain_community.vectorstores import FAISS
 load_dotenv(".env")
 VOYAGE_KEY = os.environ["VOYAGE_API_KEY"]
 ANTHROPIC_KEY = os.environ["ANTHROPIC_API_KEY"]
-OPENAI_KEY = os.environ["OPENAI_API_KEY"]
 
 def load_embeddings(key: str, french : bool = False):
     """ Load the embeddings model """
     if key is None:
-        raise ValueError("Please pass VoyageAI/OpenAI API key")
+        raise ValueError("Please pass VoyageAI API key")
     
     if french:
-        model = OpenAIEmbeddings(api_key=key, model="text-embedding-3-large")
+        model = VoyageAIEmbeddings(voyage_api_key=key, model="voyage-multilingual-2")
     else:
         model = VoyageAIEmbeddings(voyage_api_key=key, model="voyage-large-2")
     
     return model
 
-def load_db(embeddings, db_path: str) -> FAISS:
+def load_db(embeddings : VoyageAIEmbeddings, db_path: str) -> FAISS:
     """ Load the database from disk """
     # Load individual vectorstores
     base = FAISS.load_local(f"{db_path}/vectorstore_merged", embeddings, 
@@ -90,8 +88,7 @@ def generate_answer(query : str, extract : str, llm : ChatAnthropic) -> str:
 
 def main(query: str, k: int=4, french : bool = False):
     # Load data
-    embed_key = OPENAI_KEY if french else VOYAGE_KEY
-    model = load_embeddings(embed_key, french=french)
+    model = load_embeddings(VOYAGE_KEY, french=french)
     db = load_db(model, f"./processed/{'fr' if french else 'en'}")
     llm = load_llm(ANTHROPIC_KEY, french=french)
 
