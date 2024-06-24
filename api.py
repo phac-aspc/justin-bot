@@ -18,7 +18,6 @@ from backend import load_db, load_embeddings, load_llm, find_extracts, generate_
 load_dotenv(".env")
 VOYAGE_KEY = os.environ["VOYAGE_API_KEY"]
 ANTHROPIC_KEY = os.environ["ANTHROPIC_API_KEY"]
-OPENAI_KEY = os.environ["OPENAI_API_KEY"]
 
 logging.basicConfig( 
     level=logging.INFO, 
@@ -29,7 +28,7 @@ logging.basicConfig(
 )
 
 embed_model_en = load_embeddings(VOYAGE_KEY, french=False)
-embed_model_fr = load_embeddings(OPENAI_KEY, french=True)
+embed_model_fr = load_embeddings(VOYAGE_KEY, french=True)
 
 db_en = load_db(embed_model_en, "./processed/en/")
 db_fr = load_db(embed_model_fr, "./processed/fr/")
@@ -91,7 +90,7 @@ def query():
     if not query:
         logging.warning(f"Error// No query sent.")
         if lang == 'fr':
-            return jsonify({'erreur': 'Aucune requête fournie'}), 400
+            return jsonify({'error': 'Aucune requête fournie'}), 400
         else:
             return jsonify({'error': 'No query provided'}), 400
     
@@ -99,15 +98,15 @@ def query():
     if re.search(r'([;|`|{|}|#|\*|\[|\]|\\|\|]+|\-{2,}|\/{2,})', query):
         logging.warning(f"Error// Coding characters in query: {query}.")
         if lang == 'fr':
-            return jsonify({'erreur': 'Requête invalide'}), 403
+            return jsonify({'error': 'Caractères invalides dans la requête'}), 403
         else:
-            return jsonify({'error': 'Invalid query'}), 403
+            return jsonify({'error': 'Invalid query characters'}), 403
 
     # Query too long
     if len(query) > 300:
         logging.warning(f"Error// Bypassed length restrictions query: {query}.")
         if lang == 'fr':
-            return jsonify({'erreur': 'Requête trop longue'}), 413
+            return jsonify({'error': 'Requête trop longue'}), 413
         else:
             return jsonify({'error': 'Query too long'}), 413
     
@@ -145,7 +144,7 @@ def query():
     except Exception as e:
         logging.warning(f"Error// Query: {query}. Error: {e}.")
         if lang == 'fr':
-            return jsonify({'erreur': 'Erreur interne du serveur'}), 500
+            return jsonify({'error': 'Erreur interne du serveur'}), 500
         else:
             return jsonify({'error': 'Internal server error'}), 500
 
@@ -160,7 +159,7 @@ def answer():
     if not CACHE.get(id):
         logging.warning(f"Error// Invalid id: {id}.")
         if lang == 'fr':
-            return jsonify({'erreur': 'Identifiant invalide'}), 400
+            return jsonify({'error': 'Identifiant invalide'}), 400
         else:
             return jsonify({'error': 'Invalid id'}), 400
     
@@ -184,7 +183,7 @@ def answer():
     except Exception as e:
         logging.warning(f"Error// Query: {query}. Extract: {extract.page_content}. Error: {e}.")
         if lang == 'fr':
-            return jsonify({'erreur': 'Erreur interne du serveur'}), 500
+            return jsonify({'error': 'Erreur interne du serveur'}), 500
         else:
             return jsonify({'error': 'Internal server error'}), 500
     finally:
